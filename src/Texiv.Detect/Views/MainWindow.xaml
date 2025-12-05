@@ -4,26 +4,96 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:Texiv.Detect.ViewModels"
-        xmlns:local="clr-namespace:Texiv.Detect"
+        xmlns:conv="clr-namespace:Texiv.Detect.Converters"
         
         d:DataContext="{d:DesignInstance vm:MainViewModel, IsDesignTimeCreatable=False}"
         mc:Ignorable="d"
-        Title="TEXIV Garment Detect" Height="450" Width="800">
+        Title="TEXIV Garment Detect - YOLO" Height="600" Width="1000">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
+        <conv:BoolToModelStatusConverter x:Key="BoolToModelStatusConverter" />
+        <conv:BoolToColorConverter x:Key="BoolToColorConverter" />
+    </Window.Resources>
+    
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="File">
+                <MenuItem Header="Load YOLO Model" Command="{Binding LoadModelCommand}" />
+                <Separator />
                 <MenuItem Header="Open Video" Command="{Binding OpenVideoCommand}" />
             </MenuItem>
             <MenuItem Header="Video">
-                <MenuItem Header="Play" Command="{Binding PlayCommand}" /> "
+                <MenuItem Header="Play" Command="{Binding PlayCommand}" />
+                <MenuItem Header="Pause" Command="{Binding PauseCommand}" />
             </MenuItem>
         </Menu>
+        
+        <StatusBar DockPanel.Dock="Bottom" Height="30">
+            <StatusBarItem>
+                <TextBlock Text="{Binding StatusMessage}" />
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Model: " />
+                    <TextBlock Text="{Binding IsModelLoaded, Converter={StaticResource BoolToModelStatusConverter}}" 
+                               Foreground="{Binding IsModelLoaded, Converter={StaticResource BoolToColorConverter}}" 
+                               FontWeight="Bold" />
+                </StackPanel>
+            </StatusBarItem>
+        </StatusBar>
+        
         <Grid>
-            <MediaElement x:Name="VideoPlayer" 
-                          Source="{Binding VideoFilePath}"
-                          LoadedBehavior="Manual"
-                          UnloadedBehavior="Stop"
-                          Stretch="Uniform" />
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            
+            <!-- 컨트롤 패널 -->
+            <Border Grid.Row="0" Background="#F0F0F0" BorderBrush="#CCCCCC" 
+                    BorderThickness="0,0,0,1" Padding="10">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Content="Load Model" Command="{Binding LoadModelCommand}" 
+                            Width="100" Height="30" Margin="5" />
+                    <Button Content="Open Video" Command="{Binding OpenVideoCommand}" 
+                            Width="100" Height="30" Margin="5" />
+                    <Button Content="▶ Play" Command="{Binding PlayCommand}" 
+                            Width="80" Height="30" Margin="5" />
+                    <Button Content="⏸ Pause" Command="{Binding PauseCommand}" 
+                            Width="80" Height="30" Margin="5" />
+                </StackPanel>
+            </Border>
+            
+            <!-- 비디오 표시 영역 -->
+            <Border Grid.Row="1" Background="Black">
+                <Viewbox Stretch="Uniform">
+                    <Image x:Name="VideoImage" 
+                           Source="{Binding CurrentFrame}"
+                           Stretch="Uniform" />
+                </Viewbox>
+            </Border>
+            
+            <!-- 로딩 오버레이 -->
+            <Grid Grid.Row="1" Background="#80000000" 
+                  Visibility="{Binding IsModelLoaded, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="⚠ No YOLO Model Loaded" 
+                               FontSize="24" FontWeight="Bold" 
+                               Foreground="White" 
+                               HorizontalAlignment="Center" 
+                               Margin="0,0,0,10" />
+                    <TextBlock Text="Please load a YOLO model to start detection" 
+                               FontSize="16" 
+                               Foreground="White" 
+                               HorizontalAlignment="Center" />
+                    <Button Content="Load YOLO Model" 
+                            Command="{Binding LoadModelCommand}" 
+                            Width="150" Height="35" 
+                            Margin="0,20,0,0" 
+                            FontSize="14" 
+                            FontWeight="Bold" />
+                </StackPanel>
+            </Grid>
         </Grid>
     </DockPanel>
 </Window>

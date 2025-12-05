@@ -13,6 +13,7 @@ using ReactiveUI;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Disposables.Fluent;
+using System;
 
 namespace Texiv.Detect.Views;
 
@@ -25,22 +26,14 @@ public partial class MainWindow : Window, IViewFor<MainViewModel>
     {
         InitializeComponent();
         
-        this.WhenActivated(disposables =>
-        {
-            this.WhenAnyValue(x => x.ViewModel!.IsPlaying)
-                .Subscribe(isPlaying =>
-                {
-                    if (isPlaying && !string.IsNullOrEmpty(ViewModel?.VideoFilePath))
-                    {
-                        VideoPlayer.Play();
-                    }
-                    else
-                    {
-                        VideoPlayer.Pause();
-                    }
-                })
-                .DisposeWith(disposables);
-        });
+        ViewModel = new MainViewModel();
+        DataContext = ViewModel;
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        ViewModel?.Dispose();
+        base.OnClosed(e);
     }
 
     public MainViewModel? ViewModel
